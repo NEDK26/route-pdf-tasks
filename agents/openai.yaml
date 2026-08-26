@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF Router"
+  short_description: "逐页探测、确认计划并分派 PDF 解析"
+  default_prompt: "Use $pdf-router to probe this PDF, show a page-range plan, and wait for my confirmation before execution."
