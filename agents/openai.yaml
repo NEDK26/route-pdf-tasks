@@ -1,4 +1,4 @@
 interface:
   display_name: "PDF Router"
-  short_description: "逐页探测、确认计划并分派 PDF 解析"
-  default_prompt: "Use $pdf-router to probe this PDF, show a page-range plan, and wait for my confirmation before execution."
+  short_description: "逐页探测、确认路由并校验高质量 PDF 结构化输出"
+  default_prompt: "Use $pdf-router to probe this PDF, plan text/table/scan/visual-layout ranges, wait for confirmation, and validate structural fidelity after execution."

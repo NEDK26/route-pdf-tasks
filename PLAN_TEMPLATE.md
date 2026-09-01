@@ -18,9 +18,12 @@ Form suspicion: `<none|acroform-suspect>`
 | `1-4` | `text` | inline `pdftotext -enc UTF-8 -layout` | low / local | `ranges/r01-04.md` |
 | `5-6` | `scan` | load `processing-pdf` once; render and use agent vision | high / vision | `ranges/r05-06.md` |
 | `7-9` | `table-suspect` | load `extracting-pdf-text` once; `pdfplumber.find_tables()` then extract or write back to text | medium / local | `ranges/r07-09.md` |
+| `10` | `visual-layout` | load `processing-pdf` once; use text layer for values and vision for headings, lists, figures, and reading order | high / vision | `ranges/r10.md` |
 
-Remove example rows that do not apply. Add form, merge, split, manipulation, or generation work as
-an explicit row routed to `pdf`. Do not disguise document-wide operations as page extraction.
+Remove example rows that do not apply. For Markdown output, state how semantic structure will be
+created; raw `pdftotext` renamed to `.md` is not a valid method. Add form, merge, split,
+manipulation, or generation work as an explicit row routed to `pdf`. Do not disguise
+document-wide operations as page extraction.
 
 ## Dependencies and fallbacks
 

@@ -1,6 +1,6 @@
 ---
 name: pdf-router
-description: Route PDF work page by page without parsing content itself. Use when a user asks to 处理PDF、解析PDF、提取文本、OCR、识别扫描件、提取表格、填写表单、合并PDF、生成PDF, or otherwise process a .pdf file and the work needs probing, a range plan, explicit confirmation, and delegated execution.
+description: Route PDF work page by page without parsing content itself, including high-fidelity PDF-to-Markdown conversion. Use when a user asks to 处理PDF、解析PDF、提取文本、OCR、识别扫描件、提取表格、保留图片版式、填写表单、合并PDF、生成PDF, or otherwise process a .pdf file and the work needs probing, a range plan, explicit confirmation, delegated execution, and structural quality validation.
 ---
 
 # PDF Router
@@ -17,9 +17,10 @@ local command. Do not perform cross-page RAG post-processing.
    ambiguous assent are not confirmation.
 3. Treat confirmation as authorization to install only dependencies explicitly listed in that
    plan.
-4. Use `pdftotext` directly for text ranges; do not load another skill for them.
-5. Route scan ranges to `processing-pdf`, table ranges to `extracting-pdf-text`, and forms,
-   merge, split, manipulation, or generation to `pdf`.
+4. Use `pdftotext` as the authoritative text source for text ranges. Never treat raw
+   `pdftotext` output with a `.md` suffix as a finished Markdown deliverable.
+5. Route scan and `visual-layout` ranges to `processing-pdf`, table ranges to
+   `extracting-pdf-text`, and forms, merge, split, manipulation, or generation to `pdf`.
 6. Load each target skill at most once for the whole task, even when it serves several ranges.
 7. Fall back to local `pdftotext`, `pdftoppm`, or a narrowly scoped Python script only when the
    target skill is missing. Record the fallback in the plan and manifest.
@@ -31,7 +32,8 @@ Read [PROBE.md](PROBE.md) completely, then probe the input. Wrap each external p
 on form feed to obtain page statistics. Detect encryption before extraction. Mark AcroForm only
 as a document-level suspicion.
 
-Classify every page as `scan`, `table-suspect`, or `text`, retaining the evidence and thresholds.
+Classify every page as `scan`, `table-suspect`, `visual-layout`, or `text`, retaining the evidence
+and thresholds.
 Treat low effective-word density as `scan` even if nominal text exists. Probe output is evidence,
 not a content deliverable.
 
@@ -39,8 +41,10 @@ not a content deliverable.
 
 Read [PLAN_TEMPLATE.md](PLAN_TEMPLATE.md) completely. Merge adjacent pages with the same route
 into ranges. Show page range, type, method, estimated cost, output file, and every dependency or
-fallback. For `table-suspect`, state that execution will first call `find_tables()` and may write
-the range back to `text`.
+fallback. For `table-suspect`, state that execution will first call `find_tables()`, visually
+validate fragments, and may write the range back to `text` or `visual-layout`. For
+`visual-layout`, state that the text layer remains authoritative while vision reconstructs
+structure and figures.
 
 Ask the user to confirm, adjust one or more ranges, or abandon. If adjusted, regenerate the plan
 and ask again. Stop after presenting the plan until explicit confirmation arrives.
@@ -53,7 +57,8 @@ After confirmation only, read [EXECUTE.md](EXECUTE.md) completely. Create
 fingerprint and confirmed plan are unchanged.
 
 Write range outputs to `ranges/rXX-YY.md`, then build `full.md` in page order and `tables.md` from
-confirmed table ranges. Run the route-specific self-check. On failure, retry once using the
+confirmed table ranges. Run the route-specific self-check and
+`scripts/check_markdown_quality.py` for Markdown deliverables. On failure, retry once using the
 degradation matrix; if it still fails, mark the range `failed` and append a minimal failure
 record. Never invent missing output.
 
