@@ -13,7 +13,9 @@ python3 scripts/probe_pdf.py "$pdf"
 ```
 
 1. Resolve the input to an absolute path and compute `sha256`, byte size, and filename.
-2. Run `timeout 10s pdfinfo "$pdf"`. Parse `Pages` and `Encrypted`.
+2. Run `timeout 10s pdfinfo "$pdf"`. Parse `Pages` and `Encrypted`. Then run one
+   `timeout 10s pdfinfo -box -f 1 -l "$pages" "$pdf"` command and retain each page's own width
+   and height. Never reuse the first page's area for a mixed-size document.
 3. If encrypted, stop probing and plan decryption. Explain that v1 does not distinguish owner and
    user passwords. Prefer `qpdf --password='<password>' --decrypt input.pdf decrypted.pdf` after
    confirmation; never request the password in a command that will be logged when a safer prompt
@@ -34,7 +36,7 @@ python3 scripts/probe_pdf.py "$pdf"
    ±2 character columns so minor alignment drift does not hide two-column specification tables.
    Do not retain text snapshots.
 7. Run `timeout 10s pdfimages -list "$pdf"`. Ignore `mask` and `smask` rows. Estimate each raster
-   image's placed area from its pixel dimensions and X/Y PPI, divided by the PDF page area. Retain
+   image's placed area from its pixel dimensions and X/Y PPI, divided by that page's area. Retain
    only per-page image count, aggregate area ratio, and count of images occupying at least 1% of
    the page. Do not extract or retain image content during the probe.
 8. Run the global form precheck:

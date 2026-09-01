@@ -17,12 +17,14 @@ judgments. Keep user feedback judgment-level.
 | Mixed | `pdfunite <text.pdf> scanned.pdf mixed.pdf` | text and scan ranges split at the join |
 
 Record only `sha256`, byte size, page count, source category, and whether redistribution is allowed.
+Keep executable case metadata in `structural-cases.json`; never copy the source PDFs into this skill.
 
-### Labeled local case
+### Structural cases
 
 | SHA-256 | Bytes | Pages | Category | Redistribution | Reviewer judgment |
 |---|---:|---:|---|---|---|
 | `bf6e98f73d729d21513e628d53cd7045af26865427368a332c4905486ae48976` | 486433 | 3 | Chinese product one-pager + two-column specification tables | no; user-supplied | page 1 visual-layout; pages 2–3 table |
+| `7595115911b939391d826ed78a9c8901088e113bfa19dcdf47f43ba564feab5d` | 140446 | 17 | system technical specification | system documentation; file not copied | held-out structural labels remain unchanged |
 
 ## Classification oracle
 
@@ -46,6 +48,10 @@ Any disagreement requires an explanation recorded as a structural reason, never 
   `pass/fail` plus a short structural symptom.
 - Run `scripts/check_markdown_quality.py` on every Markdown range. A known-bad raw `pdftotext`
   dump must fail, while the corrected semantic Markdown must pass.
+- Run `scripts/test_probe_pdf.py` to verify page-specific image-area calculations for mixed page
+  sizes.
+- Run `scripts/test_quality_helpers.py` to ensure fenced code cannot masquerade as tables or raw
+  layout damage.
 - For scan pages, compare the rendered PNG to model output visually; the user who supplied the scan
   is final reviewer for key facts.
 
@@ -79,3 +85,13 @@ Any disagreement requires an explanation recorded as a structural reason, never 
 When changing a threshold or rule, designate the motivating PDF as labeled. Re-run all assertions
 on at least one other PDF that was not inspected while designing the change. Merge only with zero
 held-out regression and a generality argument in `PROBE.md`.
+
+Run the executable gate with local paths supplied only at invocation time:
+
+```bash
+python3 scripts/run_regression.py \
+  --case-path 'lg695p-product-sheet=/absolute/path/to/source.pdf'
+```
+
+The command fails when a case is missing, its fingerprint changes, expected labels regress, or no
+held-out case is selected. Do not weaken the gate with a silent skip for unavailable PDFs.

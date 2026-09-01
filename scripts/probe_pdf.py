@@ -40,7 +40,22 @@ def aligned_clusters(starts: Counter[int], minimum_lines: int) -> int:
     return sum(total >= minimum_lines for _, total in clusters)
 
 
-def image_metrics(output: str, page_area_points: float, page_count: int) -> list[dict[str, object]]:
+def parse_page_areas(output: str, page_count: int) -> list[tuple[float, float]]:
+    sizes: dict[int, tuple[float, float]] = {}
+    for match in re.finditer(
+        r"(?m)^Page\s+(\d+)\s+size:\s*([0-9.]+)\s+x\s+([0-9.]+)\s+pts",
+        output,
+    ):
+        page = int(match.group(1))
+        sizes[page] = (float(match.group(2)), float(match.group(3)))
+    return [sizes.get(page, (0.0, 0.0)) for page in range(1, page_count + 1)]
+
+
+def image_metrics(
+    output: str,
+    page_sizes: list[tuple[float, float]],
+) -> list[dict[str, object]]:
+    page_count = len(page_sizes)
     metrics = [
         {"image_count": 0, "aggregate_area_ratio": 0.0, "images_ge_1pct": 0}
         for _ in range(page_count)
@@ -54,6 +69,8 @@ def image_metrics(output: str, page_area_points: float, page_count: int) -> list
             continue
         width, height = int(fields[3]), int(fields[4])
         x_ppi, y_ppi = float(fields[12]), float(fields[13])
+        page_width, page_height = page_sizes[page]
+        page_area_points = page_width * page_height
         if x_ppi <= 0 or y_ppi <= 0 or page_area_points <= 0:
             continue
         area = (width / x_ppi * 72) * (height / y_ppi * 72) / page_area_points
@@ -81,7 +98,10 @@ def main() -> int:
 
     pages_match = re.search(r"(?m)^Pages:\s*(\d+)", pdfinfo)
     encrypted_match = re.search(r"(?m)^Encrypted:\s*(\S+)", pdfinfo)
-    size_match = re.search(r"(?m)^Page size:\s*([0-9.]+)\s+x\s+([0-9.]+)\s+pts", pdfinfo)
+    default_size_match = re.search(
+        r"(?m)^Page size:\s*([0-9.]+)\s+x\s+([0-9.]+)\s+pts",
+        pdfinfo,
+    )
     if not pages_match or not encrypted_match:
         raise RuntimeError("pdfinfo did not report Pages and Encrypted")
     page_count = int(pages_match.group(1))
@@ -114,8 +134,17 @@ def main() -> int:
     result["page_boundary_mismatch"] = mismatch
     parts = (parts + [""] * page_count)[:page_count]
 
-    page_area = float(size_match.group(1)) * float(size_match.group(2)) if size_match else 0.0
-    images = image_metrics(run(["pdfimages", "-list", str(source)]).stdout, page_area, page_count)
+    box_info = run(
+        ["pdfinfo", "-box", "-f", "1", "-l", str(page_count), str(source)]
+    ).stdout
+    page_sizes = parse_page_areas(box_info, page_count)
+    default_size = (
+        (float(default_size_match.group(1)), float(default_size_match.group(2)))
+        if default_size_match
+        else (0.0, 0.0)
+    )
+    page_sizes = [size if size != (0.0, 0.0) else default_size for size in page_sizes]
+    images = image_metrics(run(["pdfimages", "-list", str(source)]).stdout, page_sizes)
     strings_output = run(["strings", str(source)]).stdout
     result["acroform_suspect"] = "AcroForm" in strings_output
 
@@ -195,6 +224,8 @@ def main() -> int:
                 "aligned_two_field_starts": aligned_two,
                 "aligned_three_field_starts": aligned_three,
                 "horizontal_gap_runs": gap_runs,
+                "page_width_points": page_sizes[page_number - 1][0],
+                "page_height_points": page_sizes[page_number - 1][1],
                 **images[page_number - 1],
                 "label": label,
                 "rule": rule,

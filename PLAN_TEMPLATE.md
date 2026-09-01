@@ -15,7 +15,7 @@ Form suspicion: `<none|acroform-suspect>`
 
 | Page range | Type | Method | Estimated cost | Output file |
 |---|---|---|---|---|
-| `1-4` | `text` | inline `pdftotext -enc UTF-8 -layout` | low / local | `ranges/r01-04.md` |
+| `1-4` | `text` | `pdftotext` to `work/r01-04.txt`; for Markdown, delegate semantic formatting to `processing-pdf` | low / local | `ranges/r01-04.md` |
 | `5-6` | `scan` | load `processing-pdf` once; render and use agent vision | high / vision | `ranges/r05-06.md` |
 | `7-9` | `table-suspect` | load `extracting-pdf-text` once; `pdfplumber.find_tables()` then extract or write back to text | medium / local | `ranges/r07-09.md` |
 | `10` | `visual-layout` | load `processing-pdf` once; use text layer for values and vision for headings, lists, figures, and reading order | high / vision | `ranges/r10.md` |

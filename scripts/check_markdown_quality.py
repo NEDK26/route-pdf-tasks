@@ -18,6 +18,9 @@ import pdfplumber
 
 
 TOKEN_RE = re.compile(r"[A-Za-z]+|\d+(?:\.\d+)?|[\u4e00-\u9fff]|[±°μ‰σ]+")
+TABLE_SEPARATOR_RE = re.compile(
+    r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$"
+)
 
 
 def parse_pages(value: str, page_count: int) -> tuple[int, int]:
@@ -35,6 +38,41 @@ def tokens(text: str) -> Counter[str]:
     return Counter(token.lower() for token in TOKEN_RE.findall(text))
 
 
+def without_fenced_code(markdown: str) -> str:
+    output: list[str] = []
+    fence: str | None = None
+    for line in markdown.splitlines():
+        marker = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if marker:
+            current = marker.group(1)[0]
+            if fence is None:
+                fence = current
+            elif fence == current:
+                fence = None
+            output.append("")
+        elif fence is None:
+            output.append(line)
+        else:
+            output.append("")
+    return "\n".join(output)
+
+
+def markdown_table_metrics(markdown: str) -> tuple[int, int, int, int]:
+    rows: list[tuple[int, str]] = [
+        (index, line)
+        for index, line in enumerate(markdown.splitlines())
+        if re.fullmatch(r"\s*\|.*\|\s*", line)
+    ]
+    separators = sum(bool(TABLE_SEPARATOR_RE.fullmatch(line)) for _, line in rows)
+    blocks = 0
+    previous = -2
+    for index, _ in rows:
+        if index != previous + 1:
+            blocks += 1
+        previous = index
+    return len(rows), separators, len(rows) - separators, blocks
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("pdf", type=Path)
@@ -46,6 +84,7 @@ def main() -> int:
         required=True,
     )
     parser.add_argument("--min-token-recall", type=float, default=0.80)
+    parser.add_argument("--min-table-data-rows", type=int, default=3)
     args = parser.parse_args()
 
     markdown = args.markdown.read_text(encoding="utf-8", errors="replace")
@@ -60,20 +99,25 @@ def main() -> int:
     overlap = sum((source_tokens & output_tokens).values())
     recall = overlap / max(sum(source_tokens.values()), 1)
 
-    headings = len(re.findall(r"(?m)^#{1,6}\s+", markdown))
-    table_rows = len(re.findall(r"(?m)^\s*\|.*\|\s*$", markdown))
-    list_items = len(re.findall(r"(?m)^\s*(?:[-+*]|\d+\.)\s+", markdown))
-    image_refs = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", markdown)
+    structural_markdown = without_fenced_code(markdown)
+    headings = len(re.findall(r"(?m)^#{1,6}\s+", structural_markdown))
+    table_rows, table_separators, table_data_rows, table_blocks = markdown_table_metrics(
+        structural_markdown
+    )
+    list_items = len(re.findall(r"(?m)^\s*(?:[-+*]|\d+\.)\s+", structural_markdown))
+    image_refs = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", structural_markdown)
     unresolved_images = [
         ref
         for ref in image_refs
         if not ref.startswith(("http://", "https://", "data:"))
         and not (args.markdown.parent / ref).resolve().exists()
     ]
-    nonempty_lines = [line for line in markdown.splitlines() if line.strip()]
+    nonempty_lines = [line for line in structural_markdown.splitlines() if line.strip()]
     raw_layout_lines = sum(bool(re.search(r"\S\s{8,}\S", line)) for line in nonempty_lines)
 
     issues: list[str] = []
+    if sum(output_tokens.values()) < 10:
+        issues.append("markdown-output-too-short")
     if "\f" in markdown:
         issues.append("form-feed-page-separators-remain")
     if sum(source_tokens.values()) >= 20 and recall < args.min_token_recall:
@@ -81,16 +125,19 @@ def main() -> int:
     if unresolved_images:
         issues.append("unresolved-markdown-image-reference")
 
-    if args.expected_type == "table" and table_rows < 3:
-        issues.append("table-route-has-no-markdown-table")
-    if args.expected_type in {"text", "visual-layout", "scan"} and headings == 0:
+    if args.expected_type == "table":
+        if detected_tables == 0:
+            issues.append("table-route-lacks-find-tables-evidence")
+        if table_separators == 0 or table_blocks == 0:
+            issues.append("table-route-has-no-valid-markdown-table")
+        if table_data_rows < args.min_table_data_rows:
+            issues.append("table-route-has-too-few-data-rows")
+    if args.expected_type in {"text", "visual-layout"} and headings == 0:
         issues.append("semantic-markdown-has-no-heading")
-    if args.expected_type in {"visual-layout", "scan"}:
+    if args.expected_type == "visual-layout":
         if not image_refs and table_rows < 3 and list_items < 2:
             issues.append("visual-route-has-no-visual-or-structural-output")
-    if raw_layout_lines >= max(5, len(nonempty_lines) // 5) and not (
-        headings or table_rows or list_items or image_refs
-    ):
+    if raw_layout_lines >= max(5, len(nonempty_lines) // 5):
         issues.append("raw-pdftotext-shaped-output")
 
     report = {
@@ -101,6 +148,10 @@ def main() -> int:
         "detected_table_count": detected_tables,
         "heading_count": headings,
         "table_row_count": table_rows,
+        "table_separator_row_count": table_separators,
+        "table_data_row_count": table_data_rows,
+        "minimum_table_data_rows": args.min_table_data_rows,
+        "table_block_count": table_blocks,
         "list_item_count": list_items,
         "image_reference_count": len(image_refs),
         "unresolved_image_reference_count": len(unresolved_images),

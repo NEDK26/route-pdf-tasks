@@ -7,7 +7,9 @@ description: Route PDF work page by page without parsing content itself, includi
 
 Act only as a thin dispatcher. Never parse, OCR, interpret, summarize, or reconstruct PDF
 content inside the router. Delegate extraction to the selected skill or invoke the documented
-local command. Do not perform cross-page RAG post-processing.
+local command. The selected execution skill, agent, or deterministic converter owns deliverable
+content; the router owns only structural metrics, routing, state, and validation. Do not perform
+cross-page RAG post-processing.
 
 ## Non-negotiable rules
 
@@ -19,8 +21,9 @@ local command. Do not perform cross-page RAG post-processing.
    plan.
 4. Use `pdftotext` as the authoritative text source for text ranges. Never treat raw
    `pdftotext` output with a `.md` suffix as a finished Markdown deliverable.
-5. Route scan and `visual-layout` ranges to `processing-pdf`, table ranges to
-   `extracting-pdf-text`, and forms, merge, split, manipulation, or generation to `pdf`.
+5. Route semantic Markdown formatting, scan, and `visual-layout` ranges to `processing-pdf`,
+   table ranges to `extracting-pdf-text`, and forms, merge, split, manipulation, or generation
+   to `pdf`. Never author deliverable prose inside the router.
 6. Load each target skill at most once for the whole task, even when it serves several ranges.
 7. Fall back to local `pdftotext`, `pdftoppm`, or a narrowly scoped Python script only when the
    target skill is missing. Record the fallback in the plan and manifest.

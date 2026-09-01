@@ -73,9 +73,10 @@ never store content, expected answers, or text snapshots in `failures`.
 ## Route execution
 
 - `text`: run one `pdftotext -f X -l Y -enc UTF-8 -layout input.pdf work/range.txt` per range. For
-  plain-text output this may be the deliverable. For Markdown output, create semantic headings and
-  paragraphs from that authoritative text source; never copy the raw layout dump directly to a
-  `.md` file. Load `processing-pdf` only when visual evidence is needed for structure.
+  plain-text output this may be the deliverable. For Markdown output, load `processing-pdf` once
+  and delegate semantic headings and paragraph construction from that authoritative text source.
+  Render only when visual evidence is needed for structure. The router must not write or rewrite
+  deliverable prose, and raw layout text must never be copied directly to a `.md` file.
 - `scan`: load `processing-pdf` once. Prefer its bundled `scripts/to_images.py`; render the source
   once and consume only planned scan pages. Ask the agent vision model for Markdown per range and
   require an explicit page result for every page.
@@ -114,8 +115,10 @@ python3 scripts/check_markdown_quality.py input.pdf ranges/rXX-YY.md \
   --pages X-Y --expected-type text|table|visual-layout|scan
 ```
 
-Store only its metrics and judgment-level issues in the manifest. A `.md` file with no headings,
-tables, lists, or image references must fail when the source page visibly contains those structures.
+Store only its metrics and judgment-level issues in the manifest. For table routes, require
+`find_tables()` evidence, a Markdown separator row, and at least three non-separator rows. A `.md`
+file with no headings, tables, lists, or image references must fail when the source page visibly
+contains those structures. Dense raw-layout spacing fails even if an incidental list marker exists.
 
 ## One-retry degradation matrix
 
