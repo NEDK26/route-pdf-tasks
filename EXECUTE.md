@@ -144,5 +144,5 @@ and rerun the same one-retry policy. Reconfirm if anything material changed.
 Example agent command:
 
 ```bash
-codex exec '使用 $pdf-router 按 ./pdf-output/<doc>/manifest.json 只重跑 failed 区间；校验原文件指纹和已确认计划不变。'
+codex exec '使用 $route-pdf-tasks 按 ./pdf-output/<doc>/manifest.json 只重跑 failed 区间；校验原文件指纹和已确认计划不变。'
 ```

@@ -122,7 +122,7 @@ def main() -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
 
-    with tempfile.TemporaryDirectory(prefix="pdf-router-probe-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="route-pdf-tasks-probe-") as temporary:
         probe_path = Path(temporary) / "probe.txt"
         run(["pdftotext", "-enc", "UTF-8", "-layout", str(source), str(probe_path)])
         text = probe_path.read_text(encoding="utf-8", errors="replace")

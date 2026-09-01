@@ -1,9 +1,9 @@
 ---
-name: pdf-router
+name: route-pdf-tasks
 description: Route PDF work page by page without parsing content itself, including high-fidelity PDF-to-Markdown conversion. Use when a user asks to 处理PDF、解析PDF、提取文本、OCR、识别扫描件、提取表格、保留图片版式、填写表单、合并PDF、生成PDF, or otherwise process a .pdf file and the work needs probing, a range plan, explicit confirmation, delegated execution, and structural quality validation.
 ---
 
-# PDF Router
+# Route PDF Tasks
 
 Act only as a thin dispatcher. Never parse, OCR, interpret, summarize, or reconstruct PDF
 content inside the router. Delegate extraction to the selected skill or invoke the documented

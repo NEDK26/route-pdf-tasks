@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run content-free structural regression cases for pdf-router."""
+"""Run content-free structural regression cases for route-pdf-tasks."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
 interface:
-  display_name: "PDF Router"
+  display_name: "Route PDF Tasks"
   short_description: "逐页探测、确认路由并校验高质量 PDF 结构化输出"
-  default_prompt: "Use $pdf-router to probe this PDF, plan text/table/scan/visual-layout ranges, wait for confirmation, and validate structural fidelity after execution."
+  default_prompt: "Use $route-pdf-tasks to probe this PDF, plan text/table/scan/visual-layout ranges, wait for confirmation, and validate structural fidelity after execution."
