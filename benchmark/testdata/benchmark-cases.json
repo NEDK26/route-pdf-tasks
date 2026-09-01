@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "lg695p-product-sheet",
+      "split": "calibration",
+      "categories": ["zh-en-technical", "dense-tables", "visual-layout"],
+      "default_path": null,
+      "sha256": "bf6e98f73d729d21513e628d53cd7045af26865427368a332c4905486ae48976",
+      "size_bytes": 486433,
+      "pages": 3,
+      "redistribution": "no; user-supplied"
+    },
+    {
+      "id": "shared-mime-info-spec",
+      "split": "calibration",
+      "categories": ["born-digital-text", "multi-column", "technical"],
+      "default_path": "/usr/share/doc/shared-mime-info/shared-mime-info-spec.pdf",
+      "sha256": "7595115911b939391d826ed78a9c8901088e113bfa19dcdf47f43ba564feab5d",
+      "size_bytes": 140446,
+      "pages": 17,
+      "redistribution": "system documentation; file not copied"
+    }
+  ]
+}

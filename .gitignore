@@ -1,3 +1,4 @@
 pdf-output/
+benchmark/output/
 __pycache__/
 *.py[cod]

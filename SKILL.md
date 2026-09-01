@@ -1,6 +1,6 @@
 ---
 name: route-pdf-tasks
-description: Route PDF work page by page without parsing content itself, including high-fidelity PDF-to-Markdown conversion. Use when a user asks to 处理PDF、解析PDF、提取文本、OCR、识别扫描件、提取表格、保留图片版式、填写表单、合并PDF、生成PDF, or otherwise process a .pdf file and the work needs probing, a range plan, explicit confirmation, delegated execution, and structural quality validation.
+description: Route PDF work page by page without parsing content itself, including high-fidelity PDF-to-Markdown conversion and isolated workflow benchmarking. Use when a user asks to 处理PDF、解析PDF、提取文本、OCR、识别扫描件、提取表格、保留图片版式、填写表单、合并PDF、生成PDF, compare PDF-to-Markdown approaches, evaluate a PDF skill, or otherwise process a .pdf file and the work needs probing, a range plan, explicit confirmation, delegated execution, structural quality validation, or a blind reproducible benchmark.
 ---
 
 # Route PDF Tasks
@@ -74,3 +74,10 @@ installed and which fallbacks were used.
 
 Keep user feedback judgment-level only. Apply the regression and iteration disciplines in
 [SOURCES.md](SOURCES.md) and [testdata/REGRESSION.md](testdata/REGRESSION.md).
+
+## E. Benchmark workflows
+
+When the user asks to compare this skill with direct AI conversion or another PDF skill, read
+[benchmark/BENCHMARK.md](benchmark/BENCHMARK.md) completely. Keep benchmark execution separate
+from ordinary PDF routing. Default to a dry run and require explicit `--execute` before starting
+model calls.

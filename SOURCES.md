@@ -12,6 +12,17 @@ The `processing-pdf/scripts/` bundle was checked and includes `to_images.py`, `e
 `extract_tables.py`, `check_forms.py`, `fill_form.py`, and `metadata.py`. If a future upstream copy
 lacks image conversion, document `pdftoppm -png -r 200 -f X -l Y` as the equivalent fallback.
 
+## Evaluation methodology
+
+| Source | Applied constraint |
+|---|---|
+| https://developers.openai.com/api/reference/java/resources/evals/methods/create | Freeze a data schema and the same testing criteria across runs |
+| https://developers.openai.com/api/docs/guides/latest-model | Compare representative tasks on success, completeness, evidence, tokens, latency, and cost; do not count efficiency gains unless quality still passes |
+
+The local runner implements these constraints without requiring the hosted Evals API. Keep
+objective Python metrics separate from blinded human judgment and preserve the frozen inputs in
+each ignored benchmark run directory.
+
 ## Mandatory iteration disciplines
 
 1. **Minimal disclosure.** Accept only judgment-level feedback such as “第3页scan判错”. Never

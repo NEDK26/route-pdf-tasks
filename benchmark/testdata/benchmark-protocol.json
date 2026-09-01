@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "benchmark_id": "pdf-markdown-v1",
+  "seed": 6952026,
+  "turns": {
+    "initial": "Convert input.pdf into a complete, high-fidelity Markdown deliverable. Preserve every page, factual text, numbers, units, headings, reading order, lists, tables, and meaningful figures. Do not summarize, omit, or invent content. Write the final artifact to deliverable/full.md and place referenced files under deliverable/assets/. Include an HTML page marker in the form <!-- page: N --> for every source page. On this first turn, inspect only what is necessary to propose a page-range plan. Do not create or modify anything under deliverable/. Stop after the plan and wait for confirmation.",
+    "confirmation": "确认执行。严格按已提出的计划完成全部页面，复核完整性后提交最终 deliverable/full.md 和必要 assets；不要请求额外提示。"
+  },
+  "arms": {
+    "direct": {
+      "label": "Direct AI",
+      "invocation": "Do not load or use any PDF skill. Perform the task directly with the available base tools."
+    },
+    "reference-pdf": {
+      "label": "Configured reference PDF skill",
+      "invocation": "Use only the $pdf skill for PDF-specific instructions. Do not use $route-pdf-tasks, $processing-pdf, or $extracting-pdf-text."
+    },
+    "route-pdf-tasks": {
+      "label": "Route PDF Tasks",
+      "invocation": "Use $route-pdf-tasks at the configured skill path and its explicitly routed PDF dependencies."
+    }
+  },
+  "required_artifacts": ["deliverable/full.md"],
+  "limits": {
+    "turns": 2,
+    "automatic_retries": 0,
+    "default_timeout_seconds": 1800
+  },
+  "formal_requirements": {
+    "minimum_test_cases": 24,
+    "minimum_repeats": 3,
+    "required_arms": ["direct", "reference-pdf", "route-pdf-tasks"],
+    "required_categories": [
+      "born-digital-text",
+      "zh-en-technical",
+      "dense-tables",
+      "multi-column",
+      "visual-layout",
+      "scan-or-mixed"
+    ]
+  },
+  "human_score": {
+    "facts_and_numbers": 25,
+    "completeness": 20,
+    "tables": 20,
+    "reading_order_and_hierarchy": 15,
+    "images_and_figures": 10,
+    "markdown_usability": 10,
+    "critical_error_cap": 59
+  }
+}
